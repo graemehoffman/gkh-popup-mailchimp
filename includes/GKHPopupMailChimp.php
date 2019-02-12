@@ -10,7 +10,7 @@ namespace GKH;
 class GKHPopupMailChimp {
 
 	public function hooks() {
-		add_action( 'wp_head', [ $this, 'add_mc_embed' ] );
+		add_action( 'wp_footer', [ $this, 'add_mc_embed' ], 100 );
 		add_action( 'admin_menu', [ $this, 'options_page' ] );
 		add_action( 'admin_init', [ $this, 'settings_init' ] );
 
@@ -19,13 +19,22 @@ class GKHPopupMailChimp {
 	public function add_mc_embed() {
 		$this->options = get_option( 'gkh_mailchimp_popup_option_name' );
 
-		if (isset($this->options['uuid']) && isset($this->options['lid']) && !empty($this->options['uuid']) && !empty($this->options['lid'])) {
+		if (
+				isset($this->options['uuid']) &&
+				isset($this->options['lid']) &&
+				isset($this->options['domain']) &&
+				!empty($this->options['uuid']) &&
+				!empty($this->options['lid'])&&
+				!empty($this->options['domain'])
+		) {
+
+			$domain = $this->options['domain']; // mc.us16.list-manage.com mc.us5.list-manage.com
 			$uuid = $this->options['uuid']; // e5608fd1f1b1139cc0d6dbd97
-			$lid = $this->options['lid']; //de6d673052
+			$lid = $this->options['lid']; // de6d673052
 
 			?>
 			<script type="text/javascript" src="//downloads.mailchimp.com/js/signup-forms/popup/unique-methods/embed.js" data-dojo-config="usePlainJson: true, isDebug: false"></script>
-			<script type="text/javascript">window.dojoRequire(["mojo/signup-forms/Loader"], function(L) { L.start({"baseUrl":"mc.us5.list-manage.com","uuid":"<?php echo $uuid; ?>","lid":"<?php echo $lid; ?>","uniqueMethods":true}) })</script>
+			<script type="text/javascript">window.dojoRequire(["mojo/signup-forms/Loader"], function(L) { L.start({"baseUrl":"<?php echo $domain; ?>","uuid":"<?php echo $uuid; ?>","lid":"<?php echo $lid; ?>","uniqueMethods":true}) })</script>
 			<?php
 		}
 	}
@@ -60,8 +69,16 @@ class GKHPopupMailChimp {
 		);
 
 		add_settings_field(
+			'domain',
+			'Mailchimp domain (ex: mc.us5.list-manage.com)',
+			array( $this, 'domain_callback' ),
+			'gkh-mailchimp-popup',
+			'gkh_mailchimp_popup_setting_section_id'
+		);
+
+		add_settings_field(
 			'uuid',
-			'UUID',
+			'UUID (ex: e5608fd1f1b1139cc0d6dbd97)',
 			array( $this, 'uuid_callback' ),
 			'gkh-mailchimp-popup',
 			'gkh_mailchimp_popup_setting_section_id'
@@ -69,7 +86,7 @@ class GKHPopupMailChimp {
 
 		add_settings_field(
 			'lid',
-			'LID',
+			'LID (ex: de6d673052)',
 			array( $this, 'lid_callback' ),
 			'gkh-mailchimp-popup',
 			'gkh_mailchimp_popup_setting_section_id'
@@ -114,6 +131,9 @@ class GKHPopupMailChimp {
 		if( isset( $input['lid'] ) )
 			$new_input['lid'] = sanitize_text_field( $input['lid'] );
 
+		if( isset( $input['domain'] ) )
+			$new_input['domain'] = sanitize_text_field( $input['domain'] );
+
 		return $new_input;
 	}
 
@@ -152,6 +172,17 @@ class GKHPopupMailChimp {
 		printf(
 			'<input type="text" id="lid" name="gkh_mailchimp_popup_option_name[lid]" value="%s" />',
 			isset( $this->options['lid'] ) ? esc_attr( $this->options['lid']) : ''
+		);
+	}
+
+	/**
+	 * Get the settings option array and print one of its values
+	 */
+	public function domain_callback()
+	{
+		printf(
+			'<input type="text" id="domain" name="gkh_mailchimp_popup_option_name[domain]" value="%s" />',
+			isset( $this->options['domain'] ) ? esc_attr( $this->options['domain']) : ''
 		);
 	}
 
