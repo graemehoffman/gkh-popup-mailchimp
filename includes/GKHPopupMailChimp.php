@@ -13,19 +13,32 @@ class GKHPopupMailChimp {
 		add_action( 'wp_footer', [ $this, 'add_mc_embed' ], 100 );
 		add_action( 'admin_menu', [ $this, 'options_page' ] );
 		add_action( 'admin_init', [ $this, 'settings_init' ] );
+		add_action( 'wp_head', [ $this, 'add_custom_mc_css' ] );
 
 	}
 
+	public function add_custom_mc_css() {
+		?>
+		<style type="text/css" media="screen">
+			/* Make the MC banner invisible in mobile  */
+			@media only screen and (max-width: 768px) {
+				.mc-banner { display: none !important; }
+				.mc-modal { display: none !important; }
+				.mc-modal-bg { display: none !important; }
+			}
+		</style>
+		<?php
+	}
 	public function add_mc_embed() {
 		$this->options = get_option( 'gkh_mailchimp_popup_option_name' );
 
 		if (
-				isset($this->options['uuid']) &&
-				isset($this->options['lid']) &&
-				isset($this->options['domain']) &&
-				!empty($this->options['uuid']) &&
-				!empty($this->options['lid'])&&
-				!empty($this->options['domain'])
+			isset($this->options['uuid']) &&
+			isset($this->options['lid']) &&
+			isset($this->options['domain']) &&
+			!empty($this->options['uuid']) &&
+			!empty($this->options['lid'])&&
+			!empty($this->options['domain'])
 		) {
 
 			$domain = $this->options['domain']; // mc.us16.list-manage.com mc.us5.list-manage.com
